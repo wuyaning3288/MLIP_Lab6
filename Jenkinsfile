@@ -3,7 +3,7 @@ pipeline {
 
   environment {
     // Change this if your Miniconda lives elsewhere
-    CONDA_HOME = "${HOME}/miniconda3"
+    CONDA_HOME = "/opt/anaconda3"
     ENV_NAME   = "mlip"
   }
 
