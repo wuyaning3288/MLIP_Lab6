@@ -1,37 +1,61 @@
 pipeline {
-    agent any
+  agent any
 
-    stages {
-        stage('Build') {
-            steps {
-                sh '''#!/bin/bash
-                echo 'In C or Java, we can compile our program in this step'
-                echo 'In Python, we can build our package here or skip this step'
-                '''
-            }
-        }
-        stage('Test') {
-            steps {
-                sh '''#!/bin/bash
-                echo 'Test Step: We run testing tool like pytest here'
+  environment {
+    // Change this if your Miniconda lives elsewhere
+    CONDA_HOME = "${HOME}/miniconda3"
+    ENV_NAME   = "mlip"
+  }
 
-                # TODO fill out the path to conda here
-                # sudo /PATH/TO/CONDA init
-
-                # TODO Complete the command to run pytest
-                # sudo /PATH/TO/CONDA run -n <Envinronment Name> <Command you want to run>
-
-                echo 'pytest not runned'
-                exit 1 #comment this line after implementing Jenkinsfile
-                '''
-
-            }
-        }
-        stage('Deploy') {
-            steps {
-                echo 'In this step, we deploy our porject'
-                echo 'Depending on the context, we may publish the project artifact or upload pickle files'
-            }
-        }
+  stages {
+    stage('Checkout') {
+      steps {
+        // Pull down your GitHub fork
+        checkout scm
+      }
     }
+
+    stage('Build') {
+      steps {
+        // Stub: e.g. compile C/Java or package Python wheel
+        sh '''#!/bin/bash
+        echo 'In C/Java you would compile here; in Python you might build your package'
+        '''
+      }
+    }
+
+    stage('Test') {
+      steps {
+        sh '''#!/bin/bash
+        set -e
+
+        echo "=== Initialize Conda ==="
+        # Load conda functions
+        source "${CONDA_HOME}/etc/profile.d/conda.sh"
+
+        echo "=== Activate Env: ${ENV_NAME} ==="
+        conda activate "${ENV_NAME}"
+
+        echo "=== Installing dependencies (if needed) ==="
+        pip install --upgrade pip pytest numpy pandas scikit-learn
+
+        echo "=== Running pytest ==="
+        pytest -q
+        '''
+      }
+    }
+
+    stage('Deploy') {
+      steps {
+        echo 'In a real pipeline you’d publish artifacts or deploy here'
+      }
+    }
+  }
+
+  post {
+    always {
+      // Archive console log, test reports, etc.
+      archiveArtifacts artifacts: '**/reports/*.xml', allowEmptyArchive: true
+    }
+  }
 }
